@@ -1,7 +1,7 @@
 #CREATING A TOY DATASET
-minimo <- runif(1)
+minimo <- runif(1)*1
 maximo <- 1+runif(1)*9
-df <- data.frame(x1=seq(minimo,maximo,by=0.1))
+df <- data.frame(x1=seq(minimo,maximo,by=0.001))
 df$x2 <- c(rnorm(n=floor(dim(df)[1]/2),mean=10,sd=2),  #let's make this variable induce some clusters
            rnorm(n=ceiling(dim(df)[1]/2),mean=0,sd=1))
 plot(df)
@@ -13,11 +13,18 @@ plot(df)
 #I SUGGEST WORKING WITH THE TOY DATA SET FIRST AND THEN MOVING ON TO TRY OTHER ONES
 ####################
 
+#----------------------------- PACKAGES -----------------------------
+
+#install.packages("fpc")
+#library(fpc)
+
 #----------------------------- NECESSARY PARAMETERS -----------------------------
 var_o <- df$x1   #variable we will use to make the overlapping subsets
-n_int <- 10       #number of intervals we want
-p <- 0.2          #proportion of each interval that should overlap with the next
-
+n_int <- 5       #number of intervals we want
+p <- 0.1          #proportion of each interval that should overlap with the next
+#parameters for dbscan
+eps <- 0.7            #epsilon makes the number of clusters VERY unstable  !!!!!
+p_noise <- 0.05       #
 
 #----------------------------- CREATING THE INTERVALS -----------------------------
 #this section will create a data frame in which we will construct overlapping intervals
@@ -37,10 +44,36 @@ res <- lapply(split(intervals,intervals$name), function(x){
 
 #res
 
-#----------------------------- NEXT STEPS -----------------------------
+
 #ITERATE EVERY ELEMENT OF THE LIST (res[i]) AND CLUSTERIZE INSIDE
-#SEE HOW THEY ARE LABELED
-#DETERMINE WHICH CLUSTERS SHARE POINTS AND JOIN THEM (PUT A 1 ON THE ADJACENCY MATRIX BASICALLY)
-#MAGIC
+ints<-list()
+counter1<-1;counter2<-1
+
+for(i in 1:(n_int-1)){
+  df1<-as.data.frame(res[[i]])
+  df2<-as.data.frame(res[[i+1]])
+  
+  if(i==1){
+    MinPts <- p_noise*dim(df1)[1]
+    result1<-(dbscan(df1,eps=eps,MinPts=MinPts,showplot = TRUE))
+          }else{result1 <- result2
+                }
+  df1$cluster1 <- result1$cluster   #use the results for the last iteration
+                                    #this ensures that the cluster labels will be correct for the adj. matrix
+  
+  MinPts <- p_noise*dim(df2)[1]
+  result2<-(dbscan(df2,eps=eps,MinPts=MinPts,showplot = TRUE))
+  df2$cluster2 <- result2$cluster
+  
+  intersection <- merge(df1,df2,all=TRUE)            #points in the intersection
+  intersection[is.na(intersection)] <- 0
+  ints[[i]]<-as.data.frame(unique(intersection[3:4]))               #list of all the clusters that intersect
+  
+        }
+
+#----------------------------- GENERATE ADJACENCY MATRIX -----------------------------
+adjacency_matrix <- data.frame()
+
+
 
 
