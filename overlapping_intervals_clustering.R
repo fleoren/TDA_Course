@@ -6,6 +6,11 @@ df$x2 <- c(rnorm(n=floor(dim(df)[1]/2),mean=10,sd=2),  #let's make this variable
            rnorm(n=ceiling(dim(df)[1]/2),mean=0,sd=1))
 plot(df)
 
+#ANOTHER TOY DATASET
+#angulos <- runif(n=1000)*2*pi
+#radios  <- runif(n=1000)/10+0.5
+#df <- data.frame(x1 =radios*cos(angulos) , x2 =radios*sin(angulos) )
+#plot(df)
 ################### IMPORTANT
 #BEFORE THIS SECTION IT IS IMPORTANT FOR THE DATA FRAME THAT WILL BE USED TO BE CALLED "df"
 #ALSO I AM ASSUMING WE CAN TAKE "x1" AS A VARIABLE FROM "df" TO SUBSET
@@ -17,6 +22,7 @@ plot(df)
 
 #install.packages("fpc")
 #library(fpc)
+#library(igraph)
 
 #----------------------------- NECESSARY PARAMETERS -----------------------------
 var_o <- df$x1   #variable we will use to make the overlapping subsets
@@ -35,10 +41,11 @@ intervals <- data.frame(centers=intervals_centers)            #create a data fra
   intervals$min <- intervals_centers - (0.5+p)*interval_length                     
   intervals$max <- intervals_centers + (0.5+p)*interval_length
 #decent name for the intervals e.g    [5.34;6.53)     [6.19;7.39)
+intervals$interval <- seq(1,n_int)
 intervals$name <- with(intervals, sprintf("[%.2f;%.2f)",min,max))
 
 #function that will split the variable according to the invervals
-res <- lapply(split(intervals,intervals$name), function(x){   
+res <- lapply(split(intervals,intervals$interval), function(x){   
   return(df[var_o> x$min & var_o <= x$max,])     #res will be a list with each element res[i]
 })                                                #being the points on the i'th subset
 
@@ -72,8 +79,21 @@ for(i in 1:(n_int-1)){
         }
 
 #----------------------------- GENERATE ADJACENCY MATRIX -----------------------------
-adjacency_matrix <- data.frame()
 
+cadena=''
+for ( i in 1:length(ints)) {
+  for (j in 1:dim(ints[[i]][1])[1]) {
+    if (ints[[i]][j,1]!=0 && ints[[i]][j,2]!=0){
+      cadena<-paste(cadena,'c',i,ints[[i]][j,1],'-c',i+1,ints[[i]][j,2],',', sep="")
+    }
+  }
+}
+a<-substr(cadena,1,nchar(cadena)-1)
+print(a)
+
+#g<-graph_from_literal(c11-c22,c11-c21,c21-c32,c22-c31,c32-c41,c31-c42,c42-c51,c41-c51)
+#g<-graph_from_literal(c11-c21,c21-c31,c32-c41,c41-c51)
+plot(g)
 
 
 
