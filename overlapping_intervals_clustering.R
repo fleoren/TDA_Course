@@ -7,10 +7,10 @@ df$x2 <- c(rnorm(n=floor(dim(df)[1]/2),mean=10,sd=2),  #let's make this variable
 plot(df)
 
 #ANOTHER TOY DATASET
-#angulos <- runif(n=1000)*2*pi
-#radios  <- runif(n=1000)/10+0.5
-#df <- data.frame(x1 =radios*cos(angulos) , x2 =radios*sin(angulos) )
-#plot(df)
+angulos <- runif(n=1000)*2*pi
+radios  <- runif(n=1000)/10+0.5
+df <- data.frame(x1 =radios*cos(angulos) , x2 =radios*sin(angulos) )
+plot(df)
 ################### IMPORTANT
 #BEFORE THIS SECTION IT IS IMPORTANT FOR THE DATA FRAME THAT WILL BE USED TO BE CALLED "df"
 #ALSO I AM ASSUMING WE CAN TAKE "x1" AS A VARIABLE FROM "df" TO SUBSET
@@ -29,7 +29,7 @@ var_o <- df$x1   #variable we will use to make the overlapping subsets
 n_int <- 5       #number of intervals we want
 p <- 0.1          #proportion of each interval that should overlap with the next
 #parameters for dbscan
-eps <- 0.7            #epsilon makes the number of clusters VERY unstable  !!!!!
+eps <- 0.1            #epsilon makes the number of clusters VERY unstable  !!!!!
 p_noise <- 0.05       #
 
 #----------------------------- CREATING THE INTERVALS -----------------------------
@@ -38,8 +38,8 @@ intervals_centers <- seq(min(var_o),max(var_o),length=n_int)  #basic partition =
 interval_length <- intervals_centers[2]-intervals_centers[1]  #to create the overlaps of p% of this length
 intervals <- data.frame(centers=intervals_centers)            #create a data frame
 #create the overlapping intervals  
-  intervals$min <- intervals_centers - (0.5+p)*interval_length                     
-  intervals$max <- intervals_centers + (0.5+p)*interval_length
+intervals$min <- intervals_centers - (0.5+p)*interval_length                     
+intervals$max <- intervals_centers + (0.5+p)*interval_length
 #decent name for the intervals e.g    [5.34;6.53)     [6.19;7.39)
 intervals$interval <- seq(1,n_int)
 intervals$name <- with(intervals, sprintf("[%.2f;%.2f)",min,max))
@@ -63,10 +63,10 @@ for(i in 1:(n_int-1)){
   if(i==1){
     MinPts <- p_noise*dim(df1)[1]
     result1<-(dbscan(df1,eps=eps,MinPts=MinPts,showplot = TRUE))
-          }else{result1 <- result2
-                }
+  }else{result1 <- result2
+  }
   df1$cluster1 <- result1$cluster   #use the results for the last iteration
-                                    #this ensures that the cluster labels will be correct for the adj. matrix
+  #this ensures that the cluster labels will be correct for the adj. matrix
   
   MinPts <- p_noise*dim(df2)[1]
   result2<-(dbscan(df2,eps=eps,MinPts=MinPts,showplot = TRUE))
@@ -76,7 +76,7 @@ for(i in 1:(n_int-1)){
   intersection[is.na(intersection)] <- 0
   ints[[i]]<-as.data.frame(unique(intersection[3:4]))               #list of all the clusters that intersect
   
-        }
+}
 
 #----------------------------- GENERATE ADJACENCY MATRIX -----------------------------
 
@@ -91,9 +91,10 @@ for ( i in 1:length(ints)) {
 a<-substr(cadena,1,nchar(cadena)-1)
 print(a)
 
+#circulo
 #g<-graph_from_literal(c11-c22,c11-c21,c21-c32,c22-c31,c32-c41,c31-c42,c42-c51,c41-c51)
+#rayitas
 #g<-graph_from_literal(c11-c21,c21-c31,c32-c41,c41-c51)
-plot(g)
-
-
-
+#otra que salio con el circulo
+#g<-graph_from_literal(c11-c21,c21-c32,c21-c31,c32-c41,c31-c41,c41-c51)
+#plot(g)
