@@ -1,16 +1,28 @@
-#CREATING A TOY DATASET
+#CREATING A TOY DATASET TWO LEVELS
 minimo <- runif(1)*1
 maximo <- 1+runif(1)*9
-df <- data.frame(x1=seq(minimo,maximo,by=0.001))
-df$x2 <- c(rnorm(n=floor(dim(df)[1]/2),mean=10,sd=2),  #let's make this variable induce some clusters
+df1 <- data.frame(x1=seq(minimo,maximo,by=0.001))
+df1$x2 <- c(rnorm(n=floor(dim(df)[1]/2),mean=10,sd=2),  #let's make this variable induce some clusters
            rnorm(n=ceiling(dim(df)[1]/2),mean=0,sd=1))
-plot(df)
 
-#ANOTHER TOY DATASET
+#ANOTHER TOY DATASET CIRCLE
 angulos <- runif(n=1000)*2*pi
 radios  <- runif(n=1000)/10+0.5
-df <- data.frame(x1 =radios*cos(angulos) , x2 =radios*sin(angulos) )
+df2 <- data.frame(x1 =radios*cos(angulos) , x2 =radios*sin(angulos) )
+
+#ANOTHER TOY DATASET SWISS ROLL
+angulos <- runif(n=1000)*5*pi
+df3 <- data.frame(x1 =angulos*cos(angulos) , x2 =angulos*sin(angulos) )
+
+
+#----------------------------- IF YOU WANT KERNEL PCA FOR THE DATASET -----------------------------
+sigma <- 1
+kres <- kpca(~., data=df3,features=2,kernel="rbfdot",kpar = list(sigma = sigma))
+df4 <- as.data.frame(kres@rotated)
+
+df <- df3       #choose a dataset
 plot(df)
+
 ################### IMPORTANT
 #BEFORE THIS SECTION IT IS IMPORTANT FOR THE DATA FRAME THAT WILL BE USED TO BE CALLED "df"
 #ALSO I AM ASSUMING WE CAN TAKE "x1" AS A VARIABLE FROM "df" TO SUBSET
@@ -21,18 +33,25 @@ plot(df)
 #----------------------------- PACKAGES -----------------------------
 
 #install.packages("fpc")
+#install.packages("kernlab")
+#install.packages("igraph")
 #library(fpc)
 #library(igraph)
+#library(kernlab)
+
+
 
 #----------------------------- NECESSARY PARAMETERS -----------------------------
-var_o <- df$x1   #variable we will use to make the overlapping subsets
-n_int <- 5       #number of intervals we want
-p <- 0.1          #proportion of each interval that should overlap with the next
+#var_o <- df$x1    #variable we will use to make the overlapping subsets
+var_o <- df4$V1   #if we want to use kernel pca variable to cut
+n_int <- 6       #number of intervals we want
+p <- 0.2          #proportion of each interval that should overlap with the next
 #parameters for dbscan
-eps <- 0.1            #epsilon makes the number of clusters VERY unstable  !!!!!
+eps <- 0.7            #epsilon makes the number of clusters VERY unstable  !!!!!
 p_noise <- 0.05       #
 
 #----------------------------- CREATING THE INTERVALS -----------------------------
+
 #this section will create a data frame in which we will construct overlapping intervals
 intervals_centers <- seq(min(var_o),max(var_o),length=n_int)  #basic partition = centers
 interval_length <- intervals_centers[2]-intervals_centers[1]  #to create the overlaps of p% of this length
@@ -97,4 +116,5 @@ print(a)
 #g<-graph_from_literal(c11-c21,c21-c31,c32-c41,c41-c51)
 #otra que salio con el circulo
 #g<-graph_from_literal(c11-c21,c21-c32,c21-c31,c32-c41,c31-c41,c41-c51)
+#g<-graph_from_literal(c21-c31,c31-c41,c42-c51,c41-c52,c51-c61,c52-c61)
 #plot(g)
