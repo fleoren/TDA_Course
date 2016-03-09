@@ -2,8 +2,8 @@
 minimo <- runif(1)*1
 maximo <- 1+runif(1)*9
 df1 <- data.frame(x1=seq(minimo,maximo,by=0.001))
-df1$x2 <- c(rnorm(n=floor(dim(df)[1]/2),mean=10,sd=2),  #let's make this variable induce some clusters
-           rnorm(n=ceiling(dim(df)[1]/2),mean=0,sd=1))
+df1$x2 <- c(rnorm(n=floor(dim(df1)[1]/2),mean=10,sd=2),  #let's make this variable induce some clusters
+           rnorm(n=ceiling(dim(df1)[1]/2),mean=0,sd=1))
 
 #ANOTHER TOY DATASET CIRCLE
 angulos <- runif(n=1000)*2*pi
@@ -16,9 +16,9 @@ df3 <- data.frame(x1 =angulos*cos(angulos) , x2 =angulos*sin(angulos) )
 
 
 #----------------------------- IF YOU WANT KERNEL PCA FOR THE DATASET -----------------------------
-sigma <- 1
-kres <- kpca(~., data=df3,features=2,kernel="rbfdot",kpar = list(sigma = sigma))
-df4 <- as.data.frame(kres@rotated)
+#sigma <- 1
+#kres <- kpca(~., data=df3,features=2,kernel="rbfdot",kpar = list(sigma = sigma))
+#df4 <- as.data.frame(kres@rotated)
 
 df <- df3       #choose a dataset
 plot(df)
@@ -42,8 +42,8 @@ plot(df)
 
 
 #----------------------------- NECESSARY PARAMETERS -----------------------------
-#var_o <- df$x1    #variable we will use to make the overlapping subsets
-var_o <- df4$V1   #if we want to use kernel pca variable to cut
+var_o <- df$x1    #variable we will use to make the overlapping subsets
+#var_o <- df4$V1   #if we want to use kernel pca variable to cut
 n_int <- 6       #number of intervals we want
 p <- 0.2          #proportion of each interval that should overlap with the next
 #parameters for dbscan
@@ -82,14 +82,23 @@ for(i in 1:(n_int-1)){
   if(i==1){
     MinPts <- p_noise*dim(df1)[1]
     result1<-(dbscan(df1,eps=eps,MinPts=MinPts,showplot = TRUE))
-  }else{result1 <- result2
+    df1$cluster1 <- result1$cluster
+    
+    #create columns in the original matrix to show which cluster they belong to
+    df[dim(df)[2]+i]<-rep(0,dim(df)[1])
+    df[row.names(df1),dim(df)[2]]<-result1$cluster
+    
+  }else{result1 <- result2              #use the results for the last iteration
+        df1$cluster1 <- result1$cluster #this ensures that the cluster labels will be correct for the adj. matrix
   }
-  df1$cluster1 <- result1$cluster   #use the results for the last iteration
-  #this ensures that the cluster labels will be correct for the adj. matrix
   
   MinPts <- p_noise*dim(df2)[1]
   result2<-(dbscan(df2,eps=eps,MinPts=MinPts,showplot = TRUE))
   df2$cluster2 <- result2$cluster
+  
+  #create columns in the original matrix to show which cluster they belong to
+  df[dim(df)[2]+1]<-rep(0,dim(df)[1])
+  df[row.names(df2),dim(df)[2]]<-result2$cluster
   
   intersection <- merge(df1,df2,all=TRUE)            #points in the intersection
   intersection[is.na(intersection)] <- 0
@@ -100,15 +109,17 @@ for(i in 1:(n_int-1)){
 #----------------------------- GENERATE ADJACENCY MATRIX -----------------------------
 
 cadena=''
-for ( i in 1:length(ints)) {
-  for (j in 1:dim(ints[[i]][1])[1]) {
-    if (ints[[i]][j,1]!=0 && ints[[i]][j,2]!=0){
-      cadena<-paste(cadena,'c',i,ints[[i]][j,1],'-c',i+1,ints[[i]][j,2],',', sep="")
-    }
-  }
-}
-a<-substr(cadena,1,nchar(cadena)-1)
-print(a)
+#for ( i in 1:length(ints)) {
+#  for (j in 1:dim(ints[[i]][1])[1]) {
+#    if (ints[[i]][j,1]!=0 && ints[[i]][j,2]!=0){
+#      cadena<-paste(cadena,'c',i,ints[[i]][j,1],'-c',i+1,ints[[i]][j,2],',', sep="")
+#    }
+#  }
+#}
+#a<-substr(cadena,1,nchar(cadena)-1)
+#print(a)
+
+View(df)
 
 #circulo
 #g<-graph_from_literal(c11-c22,c11-c21,c21-c32,c22-c31,c32-c41,c31-c42,c42-c51,c41-c51)
@@ -116,5 +127,5 @@ print(a)
 #g<-graph_from_literal(c11-c21,c21-c31,c32-c41,c41-c51)
 #otra que salio con el circulo
 #g<-graph_from_literal(c11-c21,c21-c32,c21-c31,c32-c41,c31-c41,c41-c51)
-#g<-graph_from_literal(c21-c31,c31-c41,c42-c51,c41-c52,c51-c61,c52-c61)
-#plot(g)
+g<-graph_from_literal(c21-c31,c31-c41,c42-c51,c41-c52,c51-c61,c52-c61)
+plot(g)
